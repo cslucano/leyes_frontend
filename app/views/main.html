@@ -1,0 +1,68 @@
+<script>
+  var diameter = 1000,
+          format = d3.format(",d"),
+          color = d3.scale.category20c();
+
+  var bubble = d3.layout.pack()
+          .sort(null)
+          .size([diameter, diameter])
+          .padding(1.5);
+
+  var svg = d3.select(".jumbotron").append("svg")
+          .attr("width", diameter)
+          .attr("height", diameter)
+          .attr("class", "bubble");
+
+
+  d3.json("http://leyes.l/app_dev.php/leyes/agrupado?q=seguridad", function(error, root) {
+    var node = svg.selectAll(".node")
+            .data(bubble.nodes(classes(root)).filter(function(d) { return !d.children; }))
+            .enter().append("g")
+            .attr("class", "node")
+            .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+
+    node.append("title")
+            .text(function(d) { return d.className + ": " + format(d.value); });
+
+    node.append("circle")
+            .attr("r", function(d) { return d.r; })
+            .style("fill", function(d) { return color(d.packageName); });
+
+    node.append("text")
+            .attr("dy", ".3em")
+            .style("text-anchor", "middle")
+            .text(function(d) { return d.className.substring(0, d.r / 3); });
+  });
+
+  function classes(root) {
+    var classes = [];
+
+    for (var item in root ) {
+      root[item].forEach(function(child) {
+        classes.push({ packageName: child.title, className: child.title, value: child.count});
+      });
+    }
+
+    return {children: classes};
+  }
+
+  d3.select(self.frameElement).style("height", diameter + "px");
+
+</script>
+<div class="header">
+  <ul class="nav nav-pills pull-right">
+    <form name="searchForm" class="navbar-form navbar-left" role="search">
+      <div class="form-group">
+        <input ng-model="q" type="text" class="form-control" placeholder="Buscar">
+      </div>
+      <button type="submit" class="btn btn-default" ng-click="onSearch()">Buscar</button>
+    </form>
+  </ul>
+  <h3 class="text-muted">leyes</h3>
+</div>
+
+<div class="jumbotron">
+</div>
+
+<div class="row marketing">
+</div>
